@@ -1,85 +1,63 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from '../styles/ProjectDetail.module.css';
+import { useReducedMotion } from '../hooks';
+
+// Register GSAP plugins
+gsap.registerPlugin(ScrollTrigger);
+
+// Data
+import { getProjectById } from '../data/projects';
 
 const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal = false }) => {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const id = propProjectId || paramId; // Use prop if modal, param if route
+  const id = propProjectId || paramId;
   const [scrollY, setScrollY] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
   const containerRef = useRef(null);
+  const contentRef = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
 
-  // Project data - Real project
-  const projectsData = {
-    '1': {
-      id: '1',
-      number: '01',
-      title: "CASA TERRA 027",
-      category: "Residencial",
-      year: "2024",
-      location: "Corregidora, Querétaro",
-      area: "560 m²",
-      client: "Privado",
-      status: "Construido",
-      description: "Residencia unifamiliar diseñada para una familia multigeneracional, ubicada en Corregidora, Querétaro. El diseño responde a un terreno de forma irregular y a las condiciones normativas locales, integrando estrategias sustentables que consideran el clima cambiante de la región. La vivienda favorece la ventilación natural cruzada, el confort térmico y la iluminación pasiva a través de patios interiores, celosías y volúmenes abiertos que permiten una conexión fluida entre espacios.",
-      concept: "El proyecto se concibe como una secuencia de espacios interconectados que integran elementos de la arquitectura vernácula y estrategias contemporáneas. Mediante el uso de tierra apisonada, concreto aparente y madera local, se crea una atmósfera cálida, flexible y funcional. Los volúmenes se disponen en torno a patios que ofrecen privacidad, regulación climática y conexión visual con el entorno natural, generando una experiencia doméstica sensible y adaptada a las necesidades de cada miembro de la familia.",
-      // Main hero image - use one of your best renders
-      mainImage: "/projects/casa-1/photos/photo-6.png",
-      // 3D Renders without background
-      renders: [
-        { url: "/projects/casa-1/renders/render-4.png", caption: "Fachada noreste" },
-        { url: "/projects/casa-1/renders/render-1.png", caption: "Fachada suroeste" },
-        { url: "/projects/casa-1/renders/render-3.png", caption: "Corte longitudinal B-B' 3D" },
-        { url: "/projects/casa-1/renders/render-2.png", caption: "Corte longitudinal A-A' 3D" }
-      ],
-      // Real photos of the house
-      photos: [
-        { url: "/projects/casa-1/photos/photo-1.png", caption: "Cocina - Barra" },
-        { url: "/projects/casa-1/photos/photo-2.png", caption: "Sala de estar" },
-        { url: "/projects/casa-1/photos/photo-3.png", caption: "Recamara principal" },
-        { url: "/projects/casa-1/photos/photo-4.png", caption: "Asador con barra exterior" },
-        { url: "/projects/casa-1/photos/photo-5.png", caption: "Comedor" },
-        { url: "/projects/casa-1/photos/photo-6.png", caption: "Area social" },
-        { url: "/projects/casa-1/photos/photo-7.png", caption: "Fachada principal" },
-        { url: "/projects/casa-1/photos/photo-8.png", caption: "Jardin interior" },
-        { url: "/projects/casa-1/photos/photo-9.png", caption: "Vista a jardin interior" }
-      ],
-      // Floor plans
-      plans: [
-        { url: "/projects/casa-1/plans/plan-1.png", caption: "Planta de conjunto" },
-        { url: "/projects/casa-1/plans/plan-2.png", caption: "Planta baja" },
-        { url: "/projects/casa-1/plans/plan-3.png", caption: "Planta alta" }
-      ],
-      specs: [
-        "Estructura de concreto armado y acero",
-        "Muros de block con aplanado de mortero",
-        "Cancelería de aluminio con doble acristalamiento",
-        "Pisos de mármol y madera de ingeniería",
-        "Sistema de climatización VRF",
-        "Iluminación LED automatizada",
-        "Paneles solares 10kW"
-      ]
-    }
-  };
+  // Get project data from centralized source
+  const project = getProjectById(id) || getProjectById(1);
 
-  const project = projectsData[id] || projectsData['1']; // Default to project 1
+  // Transform project data for display
+  const displayProject = project ? {
+    id: project.id,
+    number: project.number,
+    title: project.title.toUpperCase(),
+    category: project.category,
+    year: project.year,
+    location: project.location,
+    area: project.area || project.size,
+    client: project.client,
+    status: project.status,
+    description: project.fullDescription || project.description,
+    concept: project.concept,
+    mainImage: project.mainImage || project.image,
+    renders: project.renders || [],
+    photos: project.photos || [],
+    plans: project.plans || [],
+    specs: project.specs || [],
+  } : null;
 
+  // Scroll tracking
   useEffect(() => {
     let scrollElement = window;
-    
+
     if (isModal && containerRef.current) {
-      // For modal, listen to the container's scroll
       scrollElement = containerRef.current;
     } else {
-      // For regular page, enable scrolling
       document.documentElement.style.overflow = 'visible';
       document.documentElement.style.height = 'auto';
       document.body.style.overflow = 'visible';
       document.body.style.height = 'auto';
     }
-    
+
     const handleScroll = () => {
       if (isModal && containerRef.current) {
         setScrollY(containerRef.current.scrollTop);
@@ -90,11 +68,10 @@ const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal
 
     scrollElement.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    
+
     return () => {
       scrollElement.removeEventListener('scroll', handleScroll);
       if (!isModal) {
-        // Cleanup only for non-modal
         document.documentElement.style.overflow = '';
         document.documentElement.style.height = '';
         document.body.style.overflow = '';
@@ -103,37 +80,207 @@ const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal
     };
   }, [isModal]);
 
-  // Calculate progress values
+  // GSAP scroll-triggered animations
+  useEffect(() => {
+    if (prefersReducedMotion || !contentRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Animate section titles
+      const sectionTitles = contentRef.current.querySelectorAll(`.${styles.sectionTitle}`);
+      sectionTitles.forEach((title) => {
+        gsap.fromTo(title,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: title,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
+              scroller: isModal ? containerRef.current : undefined,
+            },
+          }
+        );
+      });
+
+      // Animate info grid
+      const infoRows = contentRef.current.querySelectorAll(`.${styles.infoRow}`);
+      gsap.fromTo(infoRows,
+        { opacity: 0, x: -20 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: infoRows[0],
+            start: 'top 85%',
+            toggleActions: 'play none none reverse',
+            scroller: isModal ? containerRef.current : undefined,
+          },
+        }
+      );
+
+      // Animate concept text
+      const conceptText = contentRef.current.querySelector(`.${styles.conceptText}`);
+      if (conceptText) {
+        gsap.fromTo(conceptText,
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: conceptText,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
+              scroller: isModal ? containerRef.current : undefined,
+            },
+          }
+        );
+      }
+
+      // Animate render items
+      const renderItems = contentRef.current.querySelectorAll(`.${styles.renderItem}`);
+      renderItems.forEach((item) => {
+        gsap.fromTo(item,
+          { opacity: 0, y: 50, scale: 0.95 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: item,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
+              scroller: isModal ? containerRef.current : undefined,
+            },
+          }
+        );
+      });
+
+      // Animate photo items with stagger
+      const photoItems = contentRef.current.querySelectorAll(`.${styles.photoItem}`);
+      photoItems.forEach((item) => {
+        gsap.fromTo(item,
+          { opacity: 0, y: 40 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: item,
+              start: 'top 90%',
+              toggleActions: 'play none none reverse',
+              scroller: isModal ? containerRef.current : undefined,
+            },
+          }
+        );
+      });
+
+      // Animate plan items
+      const planItems = contentRef.current.querySelectorAll(`.${styles.planItem}`);
+      planItems.forEach((item) => {
+        gsap.fromTo(item,
+          { opacity: 0, y: 30, scale: 0.98 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.7,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: item,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
+              scroller: isModal ? containerRef.current : undefined,
+            },
+          }
+        );
+      });
+
+      // Animate description
+      const descriptionText = contentRef.current.querySelector(`.${styles.descriptionText}`);
+      if (descriptionText) {
+        gsap.fromTo(descriptionText,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: descriptionText,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
+              scroller: isModal ? containerRef.current : undefined,
+            },
+          }
+        );
+      }
+
+      // Animate end mark
+      const endMark = contentRef.current.querySelector(`.${styles.projectEndMark}`);
+      if (endMark) {
+        gsap.fromTo(endMark,
+          { opacity: 0, scale: 0.8 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.6,
+            ease: 'back.out(1.5)',
+            scrollTrigger: {
+              trigger: endMark,
+              start: 'top 90%',
+              toggleActions: 'play none none reverse',
+              scroller: isModal ? containerRef.current : undefined,
+            },
+          }
+        );
+      }
+
+    }, contentRef);
+
+    return () => {
+      ctx.revert();
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, [isModal, prefersReducedMotion, displayProject]);
+
   const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 1000;
   const titleProgress = Math.min(Math.max(scrollY / windowHeight, 0), 1);
 
-  // Handle close with animation
   const handleClose = (e) => {
-    // Get button position for animation origin
     const rect = e.currentTarget.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-    
+
     if (propOnClose) {
-      // For modal, pass coordinates to parent
       propOnClose(x, y);
     } else {
-      // For standalone page, use internal closing animation
       setIsClosing({ x, y });
-      
-      // Wait for animation then navigate
       setTimeout(() => {
         navigate('/');
       }, 800);
     }
   };
 
+  if (!displayProject) {
+    return <div>Proyecto no encontrado</div>;
+  }
+
   return (
     <div className={`${styles.container} ${isModal ? styles.modalContainer : ''}`} ref={containerRef}>
-      {/* Closing animation overlay */}
       {isClosing && (
         <div className={styles.closingOverlay}>
-          <div 
+          <div
             className={styles.closingCircle}
             style={{
               left: `${isClosing.x}px`,
@@ -142,77 +289,73 @@ const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal
           />
         </div>
       )}
-      
-      {/* Close button */}
-      <button 
+
+      <button
         className={`${styles.closeButton} ${scrollY > windowHeight ? styles.closeButtonDark : ''}`}
         onClick={handleClose}
-        aria-label="Close project"
+        aria-label="Cerrar proyecto"
       >
         <X size={20} />
       </button>
 
       {/* Hero section with sticky image */}
       <div className={styles.heroWrapper}>
-        <div 
+        <div
           className={styles.stickyImageContainer}
           style={{
-            position: isModal 
-              ? (titleProgress < 1 ? 'sticky' : 'absolute')
-              : (titleProgress < 1 ? 'fixed' : 'absolute'),
+            position: isModal
+              ? titleProgress < 1 ? 'sticky' : 'absolute'
+              : titleProgress < 1 ? 'fixed' : 'absolute',
             top: titleProgress < 1 ? 0 : 'auto',
             bottom: titleProgress < 1 ? 'auto' : 0,
           }}
         >
-          <img 
-            src={project.mainImage} 
-            alt={project.title}
+          <img
+            src={displayProject.mainImage}
+            alt={displayProject.title}
             className={styles.heroImage}
             style={{
               transform: `scale(${1 + scrollY * 0.0001})`,
             }}
           />
           <div className={styles.imageOverlay} />
-          
-          {/* Project number - top left */}
-          <div 
+
+          <div
             className={styles.projectNumber}
             style={{
               opacity: 1 - titleProgress * 2,
               transform: `translateY(${titleProgress * -20}px)`,
             }}
           >
-            {project.number}
+            {displayProject.number}
           </div>
 
-          {/* Title content - bottom center */}
           <div className={styles.titleContainer}>
-            <h1 
+            <h1
               className={styles.projectTitle}
               style={{
                 transform: `translateY(${(1 - titleProgress) * 100}px)`,
                 opacity: titleProgress,
               }}
             >
-              {project.title}
+              {displayProject.title}
             </h1>
-            <div 
+            <div
               className={styles.projectMeta}
               style={{
                 transform: `translateY(${(1 - titleProgress) * 80}px)`,
                 opacity: titleProgress > 0.3 ? (titleProgress - 0.3) / 0.7 : 0,
               }}
             >
-              <span>{project.location}</span>
+              <span>{displayProject.location}</span>
               <span className={styles.metaSeparator}>·</span>
-              <span>{project.year}</span>
+              <span>{displayProject.year}</span>
               <span className={styles.metaSeparator}>·</span>
-              <span>{project.category}</span>
+              <span>{displayProject.category}</span>
             </div>
           </div>
 
-          {/* Scroll indicator */}
-          <div 
+          <div
             className={styles.scrollIndicator}
             style={{
               opacity: scrollY > 10 ? 0 : 1,
@@ -224,12 +367,11 @@ const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal
           </div>
         </div>
 
-        {/* Spacer for scroll */}
         <div className={styles.scrollSpacer}></div>
       </div>
 
       {/* Main content section */}
-      <div className={styles.contentSection}>
+      <div className={styles.contentSection} ref={contentRef}>
         <div className={styles.contentInner}>
           {/* Project Info */}
           <div className={styles.infoGrid}>
@@ -238,116 +380,127 @@ const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal
               <div className={styles.infoRows}>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Proyecto</span>
-                  <span className={styles.infoValue}>{project.title}</span>
+                  <span className={styles.infoValue}>{displayProject.title}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Cliente</span>
-                  <span className={styles.infoValue}>{project.client}</span>
+                  <span className={styles.infoValue}>{displayProject.client}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Ubicación</span>
-                  <span className={styles.infoValue}>{project.location}</span>
+                  <span className={styles.infoValue}>{displayProject.location}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Área Total</span>
-                  <span className={styles.infoValue}>{project.area}</span>
+                  <span className={styles.infoValue}>{displayProject.area}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Año</span>
-                  <span className={styles.infoValue}>{project.year}</span>
+                  <span className={styles.infoValue}>{displayProject.year}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Estado</span>
-                  <span className={styles.infoValue}>{project.status}</span>
+                  <span className={styles.infoValue}>{displayProject.status}</span>
                 </div>
               </div>
             </div>
 
             <div className={styles.conceptSection}>
               <h2 className={styles.sectionTitle}>CONCEPTO</h2>
-              <p className={styles.conceptText}>{project.concept}</p>
-              
-              <div className={styles.specsSection}>
-                <h3 className={styles.subsectionTitle}>ESPECIFICACIONES</h3>
-                <ul className={styles.specsList}>
-                  {project.specs.map((spec, index) => (
-                    <li key={index}>
-                      {spec}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <p className={styles.conceptText}>{displayProject.concept}</p>
+
+              {displayProject.specs.length > 0 && (
+                <div className={styles.specsSection}>
+                  <h3 className={styles.subsectionTitle}>ESPECIFICACIONES</h3>
+                  <ul className={styles.specsList}>
+                    {displayProject.specs.map((spec, index) => (
+                      <li key={index}>{spec}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
           {/* 3D Renders Section */}
-          <div className={styles.rendersSection}>
-            <h2 className={styles.sectionTitle}>RENDERS 3D</h2>
-            <div className={styles.rendersGrid}>
-              {project.renders.map((render, index) => (
-                <div key={index} className={styles.renderItem}>
-                  <div className={styles.renderImageContainer}>
-                    <img 
-                      src={render.url} 
-                      alt={render.caption}
-                      className={styles.renderImage}
-                    />
+          {displayProject.renders.length > 0 && (
+            <div className={styles.rendersSection}>
+              <h2 className={styles.sectionTitle}>RENDERS 3D</h2>
+              <div className={styles.rendersGrid}>
+                {displayProject.renders.map((render, index) => (
+                  <div key={index} className={styles.renderItem}>
+                    <div className={styles.renderImageContainer}>
+                      <img
+                        src={render.url}
+                        alt={render.caption}
+                        className={styles.renderImage}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className={styles.imageCaption}>
+                      <span className={styles.captionText}>{render.caption}</span>
+                    </div>
                   </div>
-                  <div className={styles.imageCaption}>
-                    <span className={styles.captionText}>{render.caption}</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Photography Section */}
-          <div className={styles.photosSection}>
-            <h2 className={styles.sectionTitle}>FOTOGRAFÍAS</h2>
-            <div className={styles.photosGrid}>
-              {project.photos.map((photo, index) => (
-                <div key={index} className={`${styles.photoItem} ${styles[`photo${index + 1}`]}`}>
-                  <img 
-                    src={photo.url} 
-                    alt={photo.caption}
-                    className={styles.photoImage}
-                  />
-                  <div className={styles.photoOverlay}>
-                    <span className={styles.photoCaption}>{photo.caption}</span>
+          {displayProject.photos.length > 0 && (
+            <div className={styles.photosSection}>
+              <h2 className={styles.sectionTitle}>FOTOGRAFÍAS</h2>
+              <div className={styles.photosGrid}>
+                {displayProject.photos.map((photo, index) => (
+                  <div key={index} className={`${styles.photoItem} ${styles[`photo${index + 1}`] || ''}`}>
+                    <img
+                      src={photo.url}
+                      alt={photo.caption}
+                      className={styles.photoImage}
+                      loading="lazy"
+                    />
+                    <div className={styles.photoOverlay}>
+                      <span className={styles.photoCaption}>{photo.caption}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Floor Plans Section */}
-          <div className={styles.plansSection}>
-            <h2 className={styles.sectionTitle}>PLANOS ARQUITECTÓNICOS</h2>
-            <div className={styles.plansGrid}>
-              {project.plans.map((plan, index) => (
-                <div key={index} className={styles.planItem}>
-                  <img 
-                    src={plan.url} 
-                    alt={plan.caption}
-                    className={styles.planImage}
-                  />
-                  <div className={styles.imageCaption}>
-                    <span className={styles.captionNumber}>{String(index + 1).padStart(2, '0')}</span>
-                    <span className={styles.captionText}>{plan.caption}</span>
+          {displayProject.plans.length > 0 && (
+            <div className={styles.plansSection}>
+              <h2 className={styles.sectionTitle}>PLANOS ARQUITECTÓNICOS</h2>
+              <div className={styles.plansGrid}>
+                {displayProject.plans.map((plan, index) => (
+                  <div key={index} className={styles.planItem}>
+                    <img
+                      src={plan.url}
+                      alt={plan.caption}
+                      className={styles.planImage}
+                      loading="lazy"
+                    />
+                    <div className={styles.imageCaption}>
+                      <span className={styles.captionNumber}>
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span className={styles.captionText}>{plan.caption}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Description Section */}
           <div className={styles.descriptionSection}>
             <h2 className={styles.sectionTitle}>DESCRIPCIÓN</h2>
-            <p className={styles.descriptionText}>{project.description}</p>
+            <p className={styles.descriptionText}>{displayProject.description}</p>
             <div className={styles.projectEndMark}>
-              <span>{project.number}</span>
+              <span>{displayProject.number}</span>
               <span className={styles.endMarkSeparator}>·</span>
-              <span>{project.year}</span>
+              <span>{displayProject.year}</span>
             </div>
           </div>
         </div>

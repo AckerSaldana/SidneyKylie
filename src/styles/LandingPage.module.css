@@ -352,15 +352,27 @@ body {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  scroll-behavior: smooth;
+  scroll-behavior: auto; /* Lenis handles smooth scrolling */
   position: relative;
+  overscroll-behavior: contain;
+
+  /* Spotlight gradient mask for edge fading - premium effect */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 10%,
+    black 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 10%,
+    black 90%,
+    transparent 100%
+  );
 }
 
-/* Efecto carrusel vertical */
-.projectsList {
-  perspective: 1200px;
-  transform-style: preserve-3d;
-}
 
 /* Ocultar scrollbar por defecto */
 .projectsContainer::-webkit-scrollbar {
@@ -465,7 +477,7 @@ body {
   color: #171717;
 }
 
-/* Lista de proyectos estilo índice */
+/* Lista de proyectos estilo índice - 3D perspective context */
 .projectsList {
   max-width: 1200px;
   margin: 0 auto;
@@ -474,9 +486,11 @@ body {
   gap: 0;
   perspective: 1200px;
   transform-style: preserve-3d;
+  perspective-origin: center center;
+  /* Padding set dynamically by JS to center last item without over-scroll */
 }
 
-/* Cada item del proyecto */
+/* Cada item del proyecto - Premium 3D carousel effect */
 .projectItem {
   display: grid;
   grid-template-columns: 80px 250px 1fr auto;
@@ -484,9 +498,43 @@ body {
   align-items: center;
   padding: 4rem 0;
   border-bottom: 1px solid #e5e5e5;
-  transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
+
+  /* CSS Custom properties set by JavaScript */
+  --distance: 0;      /* -1 to 1 (signed, for direction) */
+  --abs-distance: 0;  /* 0 to 1 (absolute, for intensity) */
+
+  /* 3D transform calculations */
+  --scale: calc(1 - var(--abs-distance) * 0.12);        /* 0.88-1.0 */
+  --opacity-value: calc(1 - var(--abs-distance) * 0.5); /* 0.5-1.0 */
+  --blur-value: calc(var(--abs-distance) * 4px);        /* 0-4px */
+  --translate-z: calc(var(--abs-distance) * -80px);     /* 0 to -80px depth */
+  --rotate-x: calc(var(--distance) * 6deg);             /* -6deg to +6deg tilt */
+  --translate-y: calc(var(--distance) * 15px);          /* Parallax offset */
+
+  /* Apply 3D transforms */
+  transform:
+    translateZ(var(--translate-z))
+    translateY(var(--translate-y))
+    rotateX(var(--rotate-x))
+    scale(var(--scale));
+  opacity: var(--opacity-value);
+  filter: blur(var(--blur-value));
+
+  /* Smooth CSS transition interpolation */
+  transition:
+    transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    filter 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    background-color 0.3s ease,
+    padding 0.3s ease,
+    margin 0.3s ease;
+
+  /* GPU acceleration */
+  will-change: transform, opacity, filter;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
 }
 
 @keyframes fadeInUp {
@@ -500,15 +548,71 @@ body {
   }
 }
 
+/* Hover resets 3D effects for full visibility */
 .projectItem:hover {
+  --abs-distance: 0;
+  --distance: 0;
   background-color: #f8f8f8;
   padding-left: 1rem;
   padding-right: 1rem;
   margin-left: -1rem;
   margin-right: -1rem;
-  transform: scale(1) !important;
-  opacity: 1 !important;
 }
+
+/* ==============================================
+   Staggered Content Reveal - Premium Effect
+   Elements animate in sequentially as item enters focus
+   ============================================== */
+
+/* Category text - first to reveal */
+.projectItem .projectCategory {
+  --reveal: calc(1 - var(--abs-distance, 0));
+  opacity: calc(var(--reveal) * 0.6 + 0.4);
+  transform: translateY(calc((1 - var(--reveal)) * 12px)) translateZ(5px);
+  transition: opacity 0.3s ease, transform 0.3s ease, color 0.3s ease;
+}
+
+/* Project name - slight delay */
+.projectItem .projectName {
+  --reveal: calc(1 - var(--abs-distance, 0));
+  transform: translateY(calc((1 - var(--reveal)) * 6px)) translateZ(8px);
+  transition: transform 0.3s ease 0.03s, color 0.3s ease;
+}
+
+/* Description - more delay */
+.projectItem .projectDescription {
+  --reveal: calc(1 - var(--abs-distance, 0));
+  opacity: calc(var(--reveal) * 0.5 + 0.5);
+  transition: opacity 0.3s ease 0.06s;
+}
+
+/* Link button - last to reveal */
+.projectItem .projectLink {
+  --reveal: calc(1 - var(--abs-distance, 0));
+  transform: translateX(calc((1 - var(--reveal)) * -15px));
+  transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s, color 0.3s ease;
+}
+
+/* Image pops forward in 3D space */
+.projectItem .projectImageCircle {
+  transform: translateZ(20px);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.projectItem:hover .projectImageCircle {
+  transform: translateZ(35px) scale(1.03);
+}
+
+/* Number fades based on distance */
+.projectItem .projectNumber {
+  --reveal: calc(1 - var(--abs-distance, 0));
+  opacity: calc(var(--reveal) * 0.7 + 0.3);
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+/* ==============================================
+   End Staggered Content Reveal
+   ============================================== */
 
 /* Número del proyecto */
 .projectNumber {
@@ -1068,31 +1172,53 @@ body {
     gap: 2rem;
   }
   
-  /* Proyectos responsive */
+  /* Proyectos responsive - Reduce 3D intensity for performance */
+  .projectsContainer {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 6%,
+      black 94%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 6%,
+      black 94%,
+      transparent 100%
+    );
+  }
+
   .projectItem {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     padding: 2.5rem 0;
+    /* Reduce 3D intensity on mobile */
+    --translate-z: 0px;
+    --rotate-x: 0deg;
+    --blur-value: calc(var(--abs-distance) * 2px);
+    --scale: calc(1 - var(--abs-distance) * 0.06);
   }
-  
+
   .projectNumber {
     display: none;
   }
-  
+
   .projectImageContainer {
     width: 150px;
     height: 150px;
     margin: 0 auto;
   }
-  
+
   .projectDetails {
     padding: 0 1rem;
   }
-  
+
   .projectName {
     font-size: 1.5rem;
   }
-  
+
   .projectLink {
     opacity: 1;
     padding: 1rem;
@@ -1278,4 +1404,42 @@ body {
   height: 100vh;
   z-index: 9998;
   background: #fff;
+}
+
+/* ==============================================
+   Reduced Motion - Accessibility
+   Disable all 3D effects for users who prefer reduced motion
+   ============================================== */
+@media (prefers-reduced-motion: reduce) {
+  .projectsContainer {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .projectItem {
+    --scale: 1;
+    --opacity-value: 1;
+    --blur-value: 0px;
+    --translate-z: 0px;
+    --rotate-x: 0deg;
+    --translate-y: 0px;
+    transform: none;
+    filter: none;
+    transition: background-color 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+  }
+
+  .projectItem .projectCategory,
+  .projectItem .projectName,
+  .projectItem .projectDescription,
+  .projectItem .projectLink,
+  .projectItem .projectImageCircle,
+  .projectItem .projectNumber {
+    transform: none;
+    opacity: 1;
+    transition: color 0.3s ease;
+  }
+
+  .projectItem:hover .projectImageCircle {
+    transform: scale(1.03);
+  }
 }
