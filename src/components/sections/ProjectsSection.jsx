@@ -176,15 +176,15 @@ const ProjectsSection = ({
                     <span>•</span>
                     <span>{project.size}</span>
                   </div>
-                </div>
 
-                <button
-                  className={styles.projectLink}
-                  onClick={() => onProjectClick(project.id)}
-                >
-                  <span>Ver proyecto</span>
-                  <ArrowRight size={18} />
-                </button>
+                  <button
+                    className={styles.projectLink}
+                    onClick={() => onProjectClick(project.id)}
+                  >
+                    <span>Ver proyecto</span>
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
               </article>
             ))}
           </div>
