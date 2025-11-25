@@ -509,6 +509,7 @@ body:has(.container) {
 /* Native horizontal scroll track */
 .galleryTrack {
   flex: 1;
+  height: 100%;
   display: flex;
   align-items: center;
   overflow-x: auto;
@@ -517,7 +518,7 @@ body:has(.container) {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   gap: 2rem;
-  padding: 0 5vw;
+  padding: 0 5vw 2rem;
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -527,12 +528,13 @@ body:has(.container) {
   display: none;
 }
 
-/* Gallery items */
+/* Gallery items - using Flexbox sizing instead of rigid calc */
 .galleryItem {
   flex-shrink: 0;
   width: 75vw;
   max-width: 1000px;
-  height: calc(100vh - 14rem);
+  height: 100%;
+  max-height: 75vh;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
@@ -567,8 +569,10 @@ body:has(.container) {
   display: flex;
   align-items: baseline;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   padding-left: 0.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
 }
 
 .captionIndex {
@@ -849,7 +853,8 @@ body:has(.container) {
 
   .galleryItem {
     width: 80vw;
-    height: calc(100vh - 16rem);
+    height: 100%;
+    max-height: 70vh;
   }
 
   .gallerySectionHeader {
@@ -858,7 +863,7 @@ body:has(.container) {
 
   .galleryTrack {
     gap: 1.5rem;
-    padding: 0 4vw;
+    padding: 0 4vw 2rem;
   }
 }
 
@@ -933,12 +938,13 @@ body:has(.container) {
 
   .galleryTrack {
     gap: 1rem;
-    padding: 0 1.5rem;
+    padding: 0 1.5rem 1.5rem;
   }
 
   .galleryItem {
     width: 85vw;
-    height: calc(100vh - 14rem);
+    height: 100%;
+    max-height: 60vh;
   }
 
   .galleryCaption {

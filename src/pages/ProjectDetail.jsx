@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { gsap } from 'gsap';
@@ -195,12 +195,12 @@ const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal
   }, []);
 
   // GSAP scroll-linked animations with scrub for smooth slide-in panels
-  useEffect(() => {
+  // Using useLayoutEffect to prevent Flash of Unstyled Content (FOUC)
+  useLayoutEffect(() => {
     if (prefersReducedMotion || !contentRef.current) return;
 
-    const timer = setTimeout(() => {
-      const ctx = gsap.context(() => {
-        const scrollerConfig = isModal ? { scroller: containerRef.current } : {};
+    const ctx = gsap.context(() => {
+      const scrollerConfig = isModal ? { scroller: containerRef.current } : {};
 
         // =========================================
         // CONCEPT PANEL - Slide up and fade in with scrub
@@ -527,20 +527,23 @@ const ProjectDetail = ({ projectId: propProjectId, onClose: propOnClose, isModal
           );
         });
 
-      }, contentRef);
-
-      return () => {
-        ctx.revert();
-        splitTextInstancesRef.current.forEach(instance => instance.revert());
-        splitTextInstancesRef.current = [];
-      };
-    }, 100);
+    }, contentRef);
 
     return () => {
-      clearTimeout(timer);
+      ctx.revert();
+      splitTextInstancesRef.current.forEach(instance => instance.revert());
+      splitTextInstancesRef.current = [];
       ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, [isModal, prefersReducedMotion, displayProject]);
+
+  // Refresh ScrollTrigger when content (like images) loads to correct layout calculations
+  useEffect(() => {
+    const refreshTimer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 500);
+    return () => clearTimeout(refreshTimer);
+  }, [displayProject]);
 
   const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 1000;
   const titleProgress = Math.min(Math.max(scrollY / windowHeight, 0), 1);
