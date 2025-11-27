@@ -1,0 +1,122 @@
+/* TransitionOverlay - Global circle transition styles */
+
+.transitionCircle {
+  position: fixed;
+  border-radius: 50%;
+  background: #74C5FF;
+  z-index: var(--z-transition, 10000);
+  pointer-events: none;
+}
+
+/* Phase: expanding - Circle grows from element to cover screen */
+.transitionCircle.expanding {
+  top: var(--initial-y);
+  left: var(--initial-x);
+  width: var(--initial-size);
+  height: var(--initial-size);
+  transform: translate(-50%, -50%);
+  animation: expandCircle 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Phase: contracting - Circle shrinks to reveal new page */
+.transitionCircle.contracting {
+  top: 50%;
+  left: 50%;
+  width: 200vmax;
+  height: 200vmax;
+  transform: translate(-50%, -50%);
+  animation: contractToCorner 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Phase: exitExpanding - Circle expands from click point when exiting */
+.transitionCircle.exitExpanding {
+  top: var(--initial-y);
+  left: var(--initial-x);
+  width: var(--initial-size);
+  height: var(--initial-size);
+  transform: translate(-50%, -50%);
+  animation: expandCircleFull 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Phase: exitContracting - Circle contracts after exit expansion */
+.transitionCircle.exitContracting {
+  top: 50%;
+  left: 50%;
+  width: 200vmax;
+  height: 200vmax;
+  transform: translate(-50%, -50%);
+  animation: contractToCorner 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Animations */
+@keyframes expandCircle {
+  from {
+    width: var(--initial-size);
+    height: var(--initial-size);
+    border-radius: 50%;
+  }
+  to {
+    width: 200vmax;
+    height: 200vmax;
+    border-radius: 50%;
+  }
+}
+
+@keyframes expandCircleFull {
+  from {
+    width: var(--initial-size);
+    height: var(--initial-size);
+    border-radius: 50%;
+    top: var(--initial-y);
+    left: var(--initial-x);
+    transform: translate(-50%, -50%);
+  }
+  to {
+    width: 300vmax;
+    height: 300vmax;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes contractToCorner {
+  0% {
+    width: 200vmax;
+    height: 200vmax;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    top: var(--target-y);
+    left: var(--target-x);
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .transitionCircle {
+    animation: none !important;
+  }
+
+  .transitionCircle.expanding,
+  .transitionCircle.exitExpanding {
+    width: 200vmax;
+    height: 200vmax;
+    top: 50%;
+    left: 50%;
+  }
+
+  .transitionCircle.contracting,
+  .transitionCircle.exitContracting {
+    width: 0;
+    height: 0;
+  }
+}

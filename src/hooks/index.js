@@ -8,3 +8,4 @@ export { useWindowSize, useMediaQuery } from './useWindowSize';
 export { useLenis, useLenisScroll } from './useLenis';
 export { useSmoothScroll, LenisContext } from './useSmoothScroll';
 export { useLenisContainer } from './useLenisContainer';
+export { useInView, useStaggeredReveal } from './useInView';

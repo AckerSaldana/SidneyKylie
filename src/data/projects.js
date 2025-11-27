@@ -303,4 +303,28 @@ export const getProjectIds = () => {
   return projects.map(p => p.id);
 };
 
+/**
+ * Get the next project in sequence (loops to first after last)
+ * @param {number|string} currentId - Current project ID
+ * @returns {Object} Next project data
+ */
+export const getNextProject = (currentId) => {
+  const currentIndex = projects.findIndex(p => p.id === Number(currentId));
+  if (currentIndex === -1) return projects[0];
+  const nextIndex = (currentIndex + 1) % projects.length;
+  return projects[nextIndex];
+};
+
+/**
+ * Get the previous project in sequence (loops to last from first)
+ * @param {number|string} currentId - Current project ID
+ * @returns {Object} Previous project data
+ */
+export const getPreviousProject = (currentId) => {
+  const currentIndex = projects.findIndex(p => p.id === Number(currentId));
+  if (currentIndex === -1) return projects[projects.length - 1];
+  const prevIndex = currentIndex === 0 ? projects.length - 1 : currentIndex - 1;
+  return projects[prevIndex];
+};
+
 export default projects;

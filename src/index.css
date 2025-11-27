@@ -1,4 +1,9 @@
 /* ============================================
+   Typography - Google Fonts Import
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@400;500&display=swap');
+
+/* ============================================
    CSS Custom Properties (Design Tokens)
    ============================================ */
 :root {
@@ -6,6 +11,20 @@
   --font-display: 'Cormorant Garamond', serif;
   --font-body: 'DM Sans', sans-serif;
   --font-accent: 'Delius', cursive;
+
+  /* Typography Scale - Fluid sizing */
+  --text-hero: clamp(4rem, 12vw, 14rem);
+  --text-section: clamp(1.5rem, 3vw, 2.5rem);
+  --text-body: clamp(1rem, 1.2vw, 1.125rem);
+  --text-label: 0.75rem;
+
+  /* Spacing Scale */
+  --space-xs: clamp(0.5rem, 1vw, 0.75rem);
+  --space-sm: clamp(0.75rem, 1.5vw, 1rem);
+  --space-md: clamp(1rem, 2vw, 1.5rem);
+  --space-lg: clamp(1.5rem, 3vw, 2.5rem);
+  --space-xl: clamp(3rem, 6vw, 5rem);
+  --space-2xl: clamp(5rem, 10vw, 8rem);
 
   /* Colors - Warm Gray Scale */
   --color-gray-50: #FAFAF8;
@@ -96,14 +115,34 @@ body {
    ============================================ */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: var(--text-hero);
+}
+
+h2 {
+  font-size: var(--text-section);
+  font-weight: 400;
 }
 
 p {
-  line-height: 1.8;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.7;
   letter-spacing: 0.01em;
+}
+
+/* Labels and small text */
+.label, small {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* ============================================

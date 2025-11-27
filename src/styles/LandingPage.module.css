@@ -1,4 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Delius:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+
+/* CSS Variables */
+:root {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --accent: #74C5FF;
+  --text-dark: #171717;
+  --text-light: #fafafa;
+  --text-muted: #737373;
+}
 
 * {
   margin: 0;
@@ -14,7 +24,7 @@
 }
 
 body {
-  font-family: 'Delius', cursive;
+  font-family: var(--font-sans);
 }
 
 /* Scrollbar personalizada */
@@ -107,7 +117,7 @@ body {
   cursor: pointer;
   color: #171717;
   transition: color 0.3s ease;
-  font-family: 'Delius', cursive;
+  font-family: var(--font-sans);
   font-size: 0.875rem;
 }
 
@@ -142,7 +152,7 @@ body {
   border: none;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  font-family: 'Delius', cursive;
+  font-family: var(--font-sans);
 }
 
 .mobileMenu button:hover {
@@ -264,19 +274,23 @@ body {
 }
 
 .heroTitle {
+  font-family: var(--font-serif);
   font-size: clamp(4rem, 10vw, 10rem);
-  letter-spacing: 0.1em;
+  font-weight: 300;
+  letter-spacing: 0.02em;
   margin-bottom: 3rem;
   color: #171717;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .heroSubtitle {
   display: block;
+  font-family: var(--font-serif);
   font-size: clamp(2.5rem, 7vw, 7rem);
+  font-weight: 300;
   margin-top: 0.5rem;
-  color: #74C5FF;
-  line-height: 1.2;
+  color: var(--accent);
+  line-height: 1.1;
 }
 
 .floatingLetter {
@@ -305,9 +319,10 @@ body {
   color: #262626;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Delius', cursive;
-  font-size: 1rem;
-  line-height: 1.2; /* 1.2 x 1rem = 1.2 */
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .ctaButton:hover {
@@ -886,10 +901,6 @@ body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-}
-
-/* Ocultar scrollbar completamente */
-.aboutContainer {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
 }

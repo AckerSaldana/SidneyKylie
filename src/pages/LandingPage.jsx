@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import styles from '../styles/LandingPage.module.css';
 
 // Components
 import ClickSpark from '../components/ClickSpark';
-import ProjectDetail from './ProjectDetail';
 import { Navigation, SectionIndicators } from '../components/layout';
-import { CircleTransition } from '../components/effects';
 import {
   HeroSection,
   ProjectsSection,
   AboutSection,
   ContactSection,
 } from '../components/sections';
+
+// Contexts
+import { useTransition } from '../contexts';
 
 // Data
 import { getProjectPreviews } from '../data/projects';
@@ -25,8 +27,6 @@ const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
-  const [expandingProject, setExpandingProject] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(null);
 
   // Refs
   const projectsContainerRef = useRef(null);
@@ -34,6 +34,8 @@ const LandingPage = () => {
   const projectRefs = useRef({});
 
   // Hooks
+  const navigate = useNavigate();
+  const { startTransition } = useTransition();
   const prefersReducedMotion = useReducedMotion();
 
   // Data
@@ -210,99 +212,22 @@ const LandingPage = () => {
     };
   }, [currentSection]);
 
-  // Project click handler
+  // Project click handler - now uses TransitionContext and React Router
   const handleProjectClick = useCallback((projectId) => {
     const projectElement = projectRefs.current[projectId];
     if (!projectElement) return;
 
     const imageCircle = projectElement.querySelector(`.${styles.projectImageCircle}`);
-    const rect = imageCircle.getBoundingClientRect();
+    if (!imageCircle) return;
 
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    // Start circle transition from the thumbnail
+    startTransition(imageCircle, `/project/${projectId}`);
 
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    // Find farthest corner
-    const corners = [
-      { x: 0, y: 0 },
-      { x: viewportWidth, y: 0 },
-      { x: 0, y: viewportHeight },
-      { x: viewportWidth, y: viewportHeight },
-    ];
-
-    let maxDistance = 0;
-    let targetCorner = corners[0];
-
-    corners.forEach((corner) => {
-      const distance = Math.sqrt(
-        Math.pow(corner.x - centerX, 2) + Math.pow(corner.y - centerY, 2)
-      );
-      if (distance > maxDistance) {
-        maxDistance = distance;
-        targetCorner = corner;
-      }
-    });
-
-    // Start expanding animation
-    setExpandingProject({
-      id: projectId,
-      x: centerX,
-      y: centerY,
-      width: rect.width,
-      height: rect.height,
-      phase: 'expanding',
-      targetX: targetCorner.x,
-      targetY: targetCorner.y,
-    });
-
-    // Show project after expansion
+    // Navigate after circle covers screen
     setTimeout(() => {
-      setSelectedProject(projectId);
-      setTimeout(() => {
-        setExpandingProject((prev) => ({ ...prev, phase: 'contracting' }));
-      }, 200);
+      navigate(`/project/${projectId}`);
     }, 400);
-
-    // Clear animation
-    setTimeout(() => {
-      setExpandingProject(null);
-    }, 1000);
-  }, []);
-
-  // Close project handler
-  const handleCloseProject = useCallback((closeX, closeY) => {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    const x = closeX || viewportWidth / 2;
-    const y = closeY || viewportHeight / 2;
-
-    setExpandingProject({
-      id: 'exit',
-      x: x,
-      y: y,
-      width: 40,
-      height: 40,
-      phase: 'exitExpanding',
-      originX: viewportWidth,
-      originY: 0,
-      targetX: 0,
-      targetY: viewportHeight,
-    });
-
-    setTimeout(() => {
-      setExpandingProject((prev) => ({ ...prev, phase: 'exitContracting' }));
-      setTimeout(() => {
-        setSelectedProject(null);
-      }, 50);
-    }, 400);
-
-    setTimeout(() => {
-      setExpandingProject(null);
-    }, 800);
-  }, []);
+  }, [startTransition, navigate]);
 
   return (
     <ClickSpark>
@@ -361,23 +286,6 @@ const LandingPage = () => {
           </div>
         )}
       </div>
-
-      {/* Project Detail Modal */}
-      {selectedProject && (
-        <div
-          className={styles.projectModalWrapper}
-          style={{ pointerEvents: expandingProject ? 'none' : 'auto' }}
-        >
-          <ProjectDetail
-            projectId={selectedProject}
-            onClose={handleCloseProject}
-            isModal={true}
-          />
-        </div>
-      )}
-
-      {/* Circle Transition */}
-      <CircleTransition transitionState={expandingProject} />
     </ClickSpark>
   );
 };
